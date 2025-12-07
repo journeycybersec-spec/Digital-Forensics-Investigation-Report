@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Forensics Investigation Worksheet — Interactive Manual</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --card-bg: #0b1120;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.18);
+      --danger: #f97373;
+      --border: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --note-bg: #020617;
+      --note-border: #1f2937;
+      --success: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Sidebar */
+
+    #sidebar {
+      width: 280px;
+      max-width: 100%;
+      background: #020617;
+      border-right: 1px solid var(--border);
+      padding: 18px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    #sidebar h1 {
+      font-size: 1.1rem;
+      margin: 0 0 4px;
+    }
+
+    #sidebar small {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .case-meta {
+      padding: 10px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .case-meta label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      gap: 3px;
+    }
+
+    .case-meta input,
+    .case-meta textarea {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-main);
+      padding: 5px 7px;
+      font-size: 0.8rem;
+      resize: vertical;
+    }
+
+    .nav-section-label {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    #nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+    }
+
+    #nav-list li {
+      margin-bottom: 4px;
+    }
+
+    #nav-list a {
+      display: block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: var(--text-main);
+      border: 1px solid transparent;
+    }
+
+    #nav-list a:hover {
+      background: #020617;
+      border-color: var(--border);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sidebar-footer button {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #081023;
+      color: var(--text-main);
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .sidebar-footer button:hover {
+      background: #0b172f;
+    }
+
+    /* Main */
+
+    #main {
+      flex: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 18px 32px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      margin-bottom: 18px;
+    }
+
+    .page-header-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .page-header-title h2 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .page-header-title span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .page-header p {
+      margin: 6px 0 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .section-card {
+      margin-bottom: 14px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #020617, #020617 40%, #020617 100%);
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.75);
+      overflow: hidden;
+    }
+
+    .section-card details {
+      background: radial-gradient(circle at top left, #020617, #020617);
+    }
+
+    .section-card summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .section-summary-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .section-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      background: var(--accent-soft);
+    }
+
+    .section-title-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .section-title-main {
+      font-size: 0.95rem;
+    }
+
+    .section-title-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .section-chevron {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-left: 8px;
+      transition: transform 0.15s ease-out;
+    }
+
+    details[open] .section-chevron {
+      transform: rotate(180deg);
+    }
+
+    .section-inner {
+      padding: 10px 14px 12px;
+      font-size: 0.86rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text-muted);
+    }
+
+    h3 {
+      font-size: 0.9rem;
+      margin: 4px 0;
+    }
+
+    /* Checklist with custom green checkboxes */
+
+    ul.checklist {
+      list-style: none;
+      padding-left: 0;
+      margin: 6px 0 8px;
+    }
+
+    ul.checklist li {
+      margin: 6px 0;
+    }
+
+    .checklist label.cb-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .checklist input.cb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      margin-top: 1px;
+      border-radius: 4px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+
+    .checklist input.cb:hover {
+      border-color: #6b7280;
+    }
+
+    .checklist input.cb:checked {
+      background: #16a34a;
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+    }
+
+    .checklist input.cb::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 5px;
+      height: 9px;
+      border-right: 2px solid rgba(15, 23, 42, 0);
+      border-bottom: 2px solid rgba(15, 23, 42, 0);
+      transform: rotate(40deg);
+      transition: border-color 0.12s ease-out;
+    }
+
+    .checklist input.cb:checked::after {
+      border-right-color: #020617;
+      border-bottom-color: #020617;
+    }
+
+    .checklist strong {
+      font-weight: 600;
+    }
+
+    .callout {
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      background: #020617;
+    }
+
+    .callout.danger {
+      border-color: rgba(248, 113, 113, 0.65);
+      background: rgba(127, 29, 29, 0.28);
+    }
+
+    .callout.danger strong {
+      color: var(--danger);
+    }
+
+    .callout.tip {
+      border-color: rgba(59, 130, 246, 0.6);
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .callout-header {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+
+    .callout-header span.icon {
+      font-size: 0.85rem;
+    }
+
+    .callout-header span.label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .callout ul {
+      margin: 4px 0 2px;
+      padding-left: 18px;
+    }
+
+    .callout ul li {
+      margin-bottom: 2px;
+    }
+
+    .notes-box {
+      margin-top: 4px;
+      padding: 8px 10px 10px;
+      border-radius: 10px;
+      background: var(--note-bg);
+      border: 1px solid var(--note-border);
+    }
+
+    .notes-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .notes-label-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notes-label-left span.icon {
+      font-size: 0.9rem;
+    }
+
+    .notes-status {
+      font-size: 0.75rem;
+      color: var(--success);
+    }
+
+    textarea.section-notes {
+      width: 100%;
+      min-height: 90px;
+      max-height: 260px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--note-border);
+      resize: vertical;
+      background: #020617;
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.8rem;
+    }
+
+    .notes-hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+
+      #sidebar {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #main {
+        padding: 16px 14px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside id="sidebar">
+    <div>
+      <h1>Forensics Worksheet</h1>
+      <small>Step-by-step digital investigation guide. Notes and checklists are stored locally in your browser.</small>
+    </div>
+
+    <div class="case-meta">
+      <label>
+        Case ID / Name
+        <input type="text" id="case-id" placeholder="e.g., 2025-INV-004 – HR Laptop" />
+      </label>
+      <label>
+        Client / Organization
+        <input type="text" id="case-client" placeholder="e.g., Western View Hospital" />
+      </label>
+      <label>
+        Investigator
+        <input type="text" id="case-investigator" placeholder="Your name / team" />
+      </label>
+      <label>
+        Legal Authority / Reference
+        <textarea id="case-legal" rows="2" placeholder="Warrant #, consent form, corporate policy, outside counsel memo, etc."></textarea>
+      </label>
+    </div>
+
+    <div class="nav-section-label">Investigation Phases</div>
+    <ul id="nav-list">
+      <li><a href="#phase-intake">1. Case Intake & Scoping</a></li>
+      <li><a href="#phase-opsec">2. OPSEC & Lab Preparation</a></li>
+      <li><a href="#phase-preservation">3. Preservation & Chain of Custody</a></li>
+      <li><a href="#phase-acquisition">4. Acquisition & Imaging</a></li>
+      <li><a href="#phase-triage">5. Triage & Quick Review</a></li>
+      <li><a href="#phase-analysis">6. Deep Artifact Analysis</a></li>
+      <li><a href="#phase-osint">7. OSINT & External Corroboration</a></li>
+      <li><a href="#phase-timeline">8. Timeline & Hypothesis Testing</a></li>
+      <li><a href="#phase-reporting">9. Reporting & Evidence Packaging</a></li>
+      <li><a href="#phase-retro">10. Post-Case Review & Lessons</a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <button type="button" id="clear-all-btn">Clear All Notes, Fields & Checkboxes</button>
+      <div>All content stays on this device only. Export into your report templates as needed.</div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <header class="page-header">
+      <div class="page-header-title">
+        <h2>Digital Forensics Investigation Worksheet</h2>
+        <span>Structured checklist + notes for repeatable, defensible investigations.</span>
+      </div>
+      <p>
+        Use this worksheet from first contact through final report. Each phase includes best practices, red flags to
+        watch for, and space for detailed notes. Adapt it to corporate, civil, or criminal matters.
+      </p>
+    </header>
+
+    <!-- Phase 1: Case Intake & Scoping -->
+    <section id="phase-intake" class="section-card">
+      <details open>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">📥</div>
+            <div class="section-title-text">
+              <span class="section-title-main">1. Case Intake & Scoping</span>
+              <span class="section-title-sub">Clarify what happened, who is involved, and what the client actually needs.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Understand the allegation / incident</div>
+            <div class="pill">Output: Clear scope + objectives</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Capture a concise narrative</strong> of the incident in the client’s own words (who, what, when, where, how).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Identify stakeholders</strong> (HR, legal, IT, management, outside counsel, law enforcement).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Define investigation objectives</strong> (prove/disprove allegation, quantify impact, find data exfiltration, locate malware, etc.).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Confirm systems in scope</strong> (laptops, phones, servers, cloud accounts, SaaS tools, logs, backups).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Clarify timelines</strong> (incident window, retention concerns, upcoming deadlines or court dates).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Document constraints</strong> (downtime limits, remote workers, time zones, language, HR sensitivities).</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">⚠️</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Vague allegations with no clear question: “Just see what you can find.” Push for specific objectives.</li>
+              <li>Requests that conflict with law, policy, or privacy rules (e.g., “check everyone’s personal phone”).</li>
+              <li>Hidden agendas (retaliation, internal politics) – keep notes factual and neutral.</li>
+              <li>Client pressuring you for conclusions before any evidence is reviewed.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-intake">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Intake Notes (allegation, scope, key questions)</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Summarize the incident, parties involved, and explicit questions you are expected to answer."></textarea>
+            <div class="notes-hint">Copy/paste important client statements and clarify any ambiguous requests here.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 2: OPSEC & Lab Preparation -->
+    <section id="phase-opsec" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">🛡️</div>
+            <div class="section-title-text">
+              <span class="section-title-main">2. OPSEC & Lab Preparation</span>
+              <span class="section-title-sub">Protect yourself, the client, and the evidence before touching devices.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Safe, isolated working environment</div>
+            <div class="pill">Output: Lab & tooling ready</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Use a dedicated forensics workstation</strong> (hardened OS, encrypted drives, no everyday browsing or personal accounts).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Isolate evidence networks</strong> from the internet to prevent callbacks, C2, or data leaks.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Prepare write blockers</strong> (hardware or software) for any direct disk access.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Update and test tools</strong> (imagers, analysis suites, hash tools, scripts) before receiving evidence.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Enable logging</strong> of your own activity (case log, time tracking, tool versions, system time settings).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Review OPSEC risks</strong> if the case involves active threat actors or stalking/harassment.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">🚨</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Connecting an evidence device directly to a live, internet-connected system.</li>
+              <li>Letting corporate IT “take a quick look” before imaging, corrupting timestamps and artifacts.</li>
+              <li>Running potentially malicious evidence in the clear without sandboxing, snapshots, or isolation.</li>
+              <li>Using personal cloud storage or email for case data.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-opsec">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Lab & OPSEC Notes</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Document lab setup, tool versions, OPSEC steps taken, and any environment limitations."></textarea>
+            <div class="notes-hint">This helps defend your methodology later if you are challenged in court or by opposing experts.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 3: Preservation & Chain of Custody -->
+    <section id="phase-preservation" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">📦</div>
+            <div class="section-title-text">
+              <span class="section-title-main">3. Preservation & Chain of Custody</span>
+              <span class="section-title-sub">Secure evidence and prove it has not been altered.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Evidence integrity</div>
+            <div class="pill">Output: Chain of custody & hashes</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Log every transfer</strong> of evidence (who, when, from where, to where, purpose).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Assign unique evidence IDs</strong> to each device, image, or logical collection.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Record condition of devices</strong> (powered on/off, damage, stickers, seals, connected media).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Generate cryptographic hashes</strong> (e.g., SHA-256) for original media and each forensic image.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Store originals read-only</strong> (vault, sealed containers, tamper-evident bags, restricted access).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Maintain a central chain-of-custody form</strong> and sync it with your case log and evidence IDs.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">⚠️</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Evidence delivered with no documentation or by unauthorized individuals.</li>
+              <li>Devices powered on and in use when you arrive – risk of remote wipe or tampering.</li>
+              <li>Missing or inconsistent hashes between acquisition and later verification.</li>
+              <li>Using ad-hoc spreadsheets or email threads as “temporary” chain-of-custody records.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-preservation">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Preservation & Custody Notes</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Record how/when evidence was collected, IDs assigned, hashes generated, and storage locations."></textarea>
+            <div class="notes-hint">Include references to scanned forms, photos of evidence, or custody documents.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 4: Acquisition & Imaging -->
+    <section id="phase-acquisition" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">💾</div>
+            <div class="section-title-text">
+              <span class="section-title-main">4. Acquisition & Imaging</span>
+              <span class="section-title-sub">Create forensically sound copies of data.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Bit-for-bit images</div>
+            <div class="pill">Output: Verified images + hashes</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Select appropriate acquisition type</strong> (dead/live, full disk, logical, cloud, memory) based on case needs.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Use write blockers</strong> for physical disks whenever possible to prevent writes to original media.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Document all settings</strong> (tool, version, commands, compression, split sizes, hash algorithms).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Acquire volatile data first</strong> (RAM, live network connections, running processes) when needed.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Verify image integrity</strong> by comparing pre- and post-acquisition hashes and documenting results.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Store working copies separately</strong> from immutable originals and clearly label them as such.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">🔥</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Booting from the suspect drive (especially into its normal OS) and modifying artifacts.</li>
+              <li>Failing to capture encryption keys while live if full-disk encryption is in use.</li>
+              <li>Assuming cloud-only data will appear in disk images when it may not.</li>
+              <li>Running “cleanup” tools, AV scans, or updates before imaging.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-acquisition">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Acquisition Notes (per device/image)</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="List devices, acquisition methods, tool versions, commands used, and any acquisition issues."></textarea>
+            <div class="notes-hint">Consider one section per major device or link to a separate acquisition log.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 5: Triage & Quick Review -->
+    <section id="phase-triage" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">⚡</div>
+            <div class="section-title-text">
+              <span class="section-title-main">5. Triage & Quick Review</span>
+              <span class="section-title-sub">Find obvious indicators early without contaminating deeper analysis.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Quick indicators</div>
+            <div class="pill">Output: Leads & prioritization</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Run targeted triage</strong> (keyword hits, known bad hashes, recent docs, USB history, browser activity).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Identify low-hanging fruit</strong> (clear policy violations, obvious exfil channels, blatant malware).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Highlight key time windows</strong> where activity spikes or looks abnormal.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Decide what merits deep-dive analysis</strong> vs. what appears irrelevant noise.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Keep triage notes separate</strong> from final conclusions – treat them as hypotheses only.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">⚠️</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Using triage tools that modify timestamps or create artifacts on evidence images.</li>
+              <li>Jumping to conclusions from a handful of juicy hits without context.</li>
+              <li>Confirming bias – only looking for evidence that supports the client’s preferred narrative.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-triage">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Triage Findings & Leads</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Summarize key early hits, suspicious artifacts, and questions you want to answer in deep analysis."></textarea>
+            <div class="notes-hint">Mark clearly what is confirmed vs. what is just a hypothesis at this stage.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 6: Deep Artifact Analysis -->
+    <section id="phase-analysis" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">🔬</div>
+            <div class="section-title-text">
+              <span class="section-title-main">6. Deep Artifact Analysis</span>
+              <span class="section-title-sub">Correlate logs, artifacts, and content with the investigation questions.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Evidence-backed findings</div>
+            <div class="pill">Output: Artifacts mapped to questions</div>
+          </div>
+
+          <h3>Key Artifact Categories / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>System & user activity</strong> (event logs, prefetch, shimcache, jump lists, MRU lists, scheduled tasks).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>File access & transfer</strong> (recent files, cloud sync logs, USB history, print history, archive usage).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Network & remote access</strong> (VPN logs, RDP, SSH, remote support tools, browser history, proxies).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Messaging & email</strong> (email clients, webmail, chat apps, collaboration platforms).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Malware indicators</strong> (persistence mechanisms, suspicious binaries/scripts, unusual autoruns, rootkits).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Cloud/SaaS artifacts</strong> (OneDrive, Google Drive, Dropbox, Slack/Teams, Salesforce, etc. where applicable).</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout tip">
+            <div class="callout-header">
+              <span class="icon">💡</span>
+              <span class="label">Best practice</span>
+            </div>
+            <ul>
+              <li>Keep an analysis matrix: <em>Question → Artifact(s) → Tool → Result → Confidence</em>.</li>
+              <li>Use screenshots, hashes, and file paths for anything that will appear in the final report.</li>
+            </ul>
+          </div>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">⚠️</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Over-relying on a single tool’s interpretation of an artifact.</li>
+              <li>Ignoring exculpatory evidence that contradicts the initial allegation.</li>
+              <li>Failing to distinguish user activity from automated/system activity.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-analysis">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Artifact Analysis Notes</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Link key artifacts to specific questions and summarize what each artifact shows (or does not show)."></textarea>
+            <div class="notes-hint">Write as if this section might be quoted in a report or challenged in testimony.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 7: OSINT & External Corroboration -->
+    <section id="phase-osint" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">🌐</div>
+            <div class="section-title-text">
+              <span class="section-title-main">7. OSINT & External Corroboration</span>
+              <span class="section-title-sub">Enrich findings with open-source and external data where appropriate.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Corroborate digital evidence</div>
+            <div class="pill">Output: OSINT leads & confirmations</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Confirm scope & legality</strong> of OSINT activities with client/legal before starting.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Search for accounts, emails, usernames</strong> related to the subject across platforms (professional & personal, where allowed).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Look for data leaks or breaches</strong> tied to relevant accounts or credentials using approved breach/OSINT tools.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Correlate external activity</strong> (posts, messages, job history, contact with competitors) with internal timestamps and artifacts.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Preserve OSINT evidence</strong> (screenshots, URLs, timestamps, archive links) in case content is edited or removed.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">🚫</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Crossing from passive OSINT into active engagement without explicit approval (e.g., contacting targets, sockpuppet accounts).</li>
+              <li>Using deceptive methods that violate platform terms or local law without legal guidance.</li>
+              <li>Assuming online claims are true without corroborating with internal evidence or independent sources.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-osint">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>OSINT & Corroboration Notes</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Document key OSINT findings, how they were obtained, and how they support or contradict internal evidence."></textarea>
+            <div class="notes-hint">Reference specific tools/bookmarks/runbooks you used for this case.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 8: Timeline & Hypothesis Testing -->
+    <section id="phase-timeline" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">📅</div>
+            <div class="section-title-text">
+              <span class="section-title-main">8. Timeline & Hypothesis Testing</span>
+              <span class="section-title-sub">Build a coherent story anchored in timestamps and artifacts.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Coherent event timeline</div>
+            <div class="pill">Output: Narrative supported by artifacts</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Normalize time</strong> across sources (time zones, DST, clock drift, log formats, device settings).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Plot key events</strong> (logins, file access, network connections, messages, physical presence, badge logs).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Test alternate explanations</strong> (could this be automated, a scheduled task, another user, or a backend system?).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Highlight gaps</strong> where data is missing, overwritten, or unavailable.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Mark interpretation boundaries</strong> where you move from raw evidence to conclusions or opinions.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">⚠️</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Misaligned clocks causing apparent “impossible” sequences of events.</li>
+              <li>Assuming correlation equals causation without proof.</li>
+              <li>Ignoring periods where logs are missing but activity is alleged.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-timeline">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Timeline & Narrative Notes</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Draft the investigation timeline and test different hypotheses against the evidence."></textarea>
+            <div class="notes-hint">You can later convert this into the narrative section of your final report.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 9: Reporting & Evidence Packaging -->
+    <section id="phase-reporting" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">📑</div>
+            <div class="section-title-text">
+              <span class="section-title-main">9. Reporting & Evidence Packaging</span>
+              <span class="section-title-sub">Deliver clear, defensible findings tailored to the audience.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Clear, actionable report</div>
+            <div class="pill">Output: Final deliverables + evidence set</div>
+          </div>
+
+          <h3>Best Practices / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Define your audiences</strong> (technical teams, HR/management, legal, possibly a judge or jury).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Separate facts, interpretations, and opinions</strong> clearly in the report.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Use plain language</strong> for non-technical readers while preserving technical accuracy.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Attach key artifacts</strong> (screenshots, hashes, directory listings, logs) with clear labels and explanations.</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Include limitations</strong> (data you did not receive, corrupted logs, scope restrictions, tools used).</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span><strong>Document chain of custody & methodology</strong> in an appendix, ready for legal scrutiny.</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="callout danger">
+            <div class="callout-header">
+              <span class="icon">⚠️</span>
+              <span class="label">Things to watch out for</span>
+            </div>
+            <ul>
+              <li>Overstating certainty or making legal conclusions outside your role.</li>
+              <li>Leaving out context that could materially change how evidence is interpreted.</li>
+              <li>Including speculative or irrelevant personal opinions.</li>
+            </ul>
+          </div>
+
+          <div class="notes-box" data-section="phase-reporting">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Reporting & Packaging Notes</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Outline the structure of your report, key findings, recommendations, and evidence attachments."></textarea>
+            <div class="notes-hint">Use this section as a scratchpad before moving content into your formal report template.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- Phase 10: Post-Case Review & Lessons -->
+    <section id="phase-retro" class="section-card">
+      <details>
+        <summary>
+          <div class="section-summary-left">
+            <div class="section-icon">♻️</div>
+            <div class="section-title-text">
+              <span class="section-title-main">10. Post-Case Review & Lessons</span>
+              <span class="section-title-sub">Improve your process and tooling for the next investigation.</span>
+            </div>
+          </div>
+          <div class="section-chevron">▼</div>
+        </summary>
+        <div class="section-inner">
+          <div class="pill-row">
+            <div class="pill">Goal: Continuous improvement</div>
+            <div class="pill">Output: Lessons, playbook updates</div>
+          </div>
+
+          <h3>Review Questions / Checklist</h3>
+          <ul class="checklist">
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span>What <strong>worked particularly well</strong> in this investigation (tools, workflows, communication)?</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span>Where did <strong>tools, processes, or communication</strong> slow you down or create confusion?</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span>What <strong>artifacts or evidence sources</strong> did you discover that should be added to your standard playbook?</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span>Were there any <strong>OPSEC or legal gray areas</strong> that need clearer guidance next time?</span>
+              </label>
+            </li>
+            <li>
+              <label class="cb-wrap">
+                <input type="checkbox" class="cb">
+                <span>Are there reusable <strong>scripts, checklists, or report language</strong> worth templating for future cases?</span>
+              </label>
+            </li>
+          </ul>
+
+          <div class="notes-box" data-section="phase-retro">
+            <div class="notes-box-header">
+              <div class="notes-label-left">
+                <span class="icon">📝</span>
+                <span>Post-Case Lessons & Improvements</span>
+              </div>
+              <span class="notes-status"></span>
+            </div>
+            <textarea class="section-notes" placeholder="Capture lessons learned, things to add to your runbooks, and changes to make for future cases."></textarea>
+            <div class="notes-hint">Treat this as your personal retrospective – it will make your next case faster and cleaner.</div>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    const NOTES_PREFIX = "forensicsWorksheet_notes_";
+    const FIELD_PREFIX = "forensicsWorksheet_field_";
+    const CB_PREFIX = "forensicsWorksheet_cb_";
+
+    function initNotes() {
+      const boxes = document.querySelectorAll(".notes-box");
+      boxes.forEach((box) => {
+        const sectionId = box.getAttribute("data-section");
+        const textarea = box.querySelector(".section-notes");
+        const status = box.querySelector(".notes-status");
+        if (!sectionId || !textarea) return;
+
+        const saved = localStorage.getItem(NOTES_PREFIX + sectionId);
+        if (saved !== null) {
+          textarea.value = saved;
+          if (status) status.textContent = "✓ Saved";
+        }
+
+        textarea.addEventListener("input", () => {
+          localStorage.setItem(NOTES_PREFIX + sectionId, textarea.value);
+          if (status) status.textContent = "✓ Saved";
+        });
+      });
+    }
+
+    function initFieldPersistence() {
+      const fields = document.querySelectorAll(
+        "#sidebar input, #sidebar textarea"
+      );
+      fields.forEach((el, idx) => {
+        const key = FIELD_PREFIX + idx;
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
+          el.value = saved;
+        }
+
+        el.addEventListener("input", () => {
+          localStorage.setItem(key, el.value);
+        });
+      });
+    }
+
+    function initCheckboxes() {
+      const boxes = document.querySelectorAll(".checklist input.cb");
+      boxes.forEach((box, idx) => {
+        const key = CB_PREFIX + idx;
+        box.dataset.cbKey = key;
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
+          box.checked = saved === "true";
+        }
+        box.addEventListener("change", () => {
+          localStorage.setItem(key, box.checked);
+        });
+      });
+    }
+
+    function clearAll() {
+      if (
+        !confirm(
+          "Clear all saved notes, sidebar fields, and checklist checkboxes for this worksheet on this device?"
+        )
+      )
+        return;
+
+      // Clear notes
+      document.querySelectorAll(".notes-box").forEach((box) => {
+        const sectionId = box.getAttribute("data-section");
+        const textarea = box.querySelector(".section-notes");
+        const status = box.querySelector(".notes-status");
+        if (!sectionId || !textarea) return;
+        textarea.value = "";
+        if (status) status.textContent = "";
+        localStorage.removeItem(NOTES_PREFIX + sectionId);
+      });
+
+      // Clear sidebar fields
+      const fields = document.querySelectorAll("#sidebar input, #sidebar textarea");
+      fields.forEach((el, idx) => {
+        el.value = "";
+        localStorage.removeItem(FIELD_PREFIX + idx);
+      });
+
+      // Clear checkboxes
+      const boxes = document.querySelectorAll(".checklist input.cb");
+      boxes.forEach((box) => {
+        box.checked = false;
+        const key = box.dataset.cbKey;
+        if (key) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initNotes();
+      initFieldPersistence();
+      initCheckboxes();
+      const clearBtn = document.getElementById("clear-all-btn");
+      if (clearBtn) clearBtn.addEventListener("click", clearAll);
+    });
+  </script>
+</body>
+</html>
